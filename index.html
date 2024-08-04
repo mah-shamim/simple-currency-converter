@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Currency Converter</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<div class="container">
+    <h2 class="text-center">Currency Converter</h2>
+    <form id="currency-form">
+        <div class="form-group">
+            <label for="amount">Amount:</label>
+            <input type="number" class="form-control" id="amount" placeholder="Enter amount" required>
+        </div>
+        <div class="form-group">
+            <label for="from_currency">From:</label>
+            <select class="form-control" id="from_currency">
+                <!-- Options will be loaded dynamically -->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="to_currency">To:</label>
+            <select class="form-control" id="to_currency">
+                <!-- Options will be loaded dynamically -->
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Convert</button>
+    </form>
+    <div id="result" class="alert alert-success" style="display:none;"></div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script src="assets/js/script.js"></script>
+</body>
+</html>
