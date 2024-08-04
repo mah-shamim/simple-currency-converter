@@ -1,6 +1,5 @@
 # simple-currency-converter
 
-A currency converter tool that fetches and displays real-time exchange rates using an external API and allows users to convert amounts between different currencies. Built using PHP, HTML, jQuery, AJAX, JSON, Bootstrap, CSS, and MySQL.
 A PHP-based Currency Converter tool that allows users to convert currencies using real-time exchange rates fetched from an external API. The tool is built with PHP, HTML, jQuery, AJAX, JSON, Bootstrap, CSS, and MySQL. The application is designed to provide accurate currency conversion and display results in a user-friendly interface.
 
 **Topics:** `php`, `mysql`, `blog`, `ajax`, `bootstrap`, `jquery`, `css`, `currency conversion`, `external api integration`, `api integration`
