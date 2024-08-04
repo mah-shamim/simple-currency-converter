@@ -5,7 +5,7 @@ A PHP-based Currency Converter tool that allows users to convert currencies usin
 
 **Topics:** `php`, `mysql`, `blog`, `ajax`, `bootstrap`, `jquery`, `css`, `currency conversion`, `external api integration`, `api integration`
 
-![simple-image-gallery](./assets/images/simple-currency-converter.png)
+![simple-currency-converter](./assets/images/simple-currency-converter.png)
 
 ### Install Process
 
