@@ -1,11 +1,14 @@
-# Dockerfile for Simple Calculator
+# Use an official PHP image
 FROM php:7.4-apache
 
-# Set working directory
-WORKDIR /var/www/html
+# Install MySQL extensions
+RUN docker-php-ext-install pdo pdo_mysql
 
-# Copy source code
-COPY . .
+# Copy application code
+COPY . /var/www/html/
 
-# Expose port 80 for the web server
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html/
+
+# Expose port 80
 EXPOSE 80
