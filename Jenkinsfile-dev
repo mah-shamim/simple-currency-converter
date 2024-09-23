@@ -1,0 +1,20 @@
+pipeline {
+    agent any
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git 'https://github.com/mah-shamim/simple-calculator.git'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t simple-calculator .'
+            }
+        }
+        stage('Run Docker Container') {
+            steps {
+                sh 'docker run -d -p 8080:80 simple-calculator'
+            }
+        }
+    }
+}
