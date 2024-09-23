@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        DOCKER_TAG = "currency_converter:$BUILD_ID mahshamim/currency_converter:$BUILD_ID"
+        DOCKER_TAG = "currency_converter:$BUILD_ID"
         CONTAINER_NAME = "currency_converter_app"
     }
     stages {
