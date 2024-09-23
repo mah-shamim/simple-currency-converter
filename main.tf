@@ -12,6 +12,6 @@ resource "docker_container" "app_container" {
   name  = "simple_calculator_container"
   ports {
     internal = 80
-    external = 8080
+    external = 9090
   }
 }
