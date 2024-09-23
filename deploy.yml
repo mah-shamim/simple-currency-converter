@@ -1,0 +1,19 @@
+- hosts: localhost
+  become: true
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Start Docker Service
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Build Docker Image
+      command: docker build -t simple-calculator .
+
+    - name: Run Docker Container
+      command: docker run -d -p 8080:80 simple-calculator
