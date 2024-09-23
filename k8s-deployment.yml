@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currency-converter-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: currency-converter
+  template:
+    metadata:
+      labels:
+        app: currency-converter
+    spec:
+      containers:
+        - name: currency-converter
+          image: currency_converter:$BUILD_ID
+          ports:
+            - containerPort: 80
