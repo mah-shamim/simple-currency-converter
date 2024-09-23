@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CONTAINER_NAME="currency_converter_app"
-DOCKER_IMAGE_TAG="currency_converter:$BUILD_ID"
+DOCKER_IMAGE_TAG="currency_converter:$BUILD_ID mahshamim/currency_converter:$BUILD_ID"
 PORT=9090
 
 # Check if the container is running
