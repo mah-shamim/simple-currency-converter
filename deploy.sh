@@ -1,23 +1,20 @@
 #!/bin/bash
 
-# Clone the repository
-git clone https://github.com/mah-shamim/simple-calculator.git
-cd simple-calculator
+CONTAINER_NAME="currency_converter_app"
+DOCKER_IMAGE_TAG="currency_converter:$BUILD_ID"
+PORT=8080
 
-# Build Docker image
-docker build -t simple-calculator .
+# Check if the container is running
+if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
+    echo "Stopping and removing existing container..."
+    docker stop $CONTAINER_NAME
+    docker rm $CONTAINER_NAME
+fi
 
-# Run Ansible playbook
-ansible-playbook deploy.yml
+# Build the Docker image
+echo "Building Docker image with tag $DOCKER_IMAGE_TAG..."
+docker build -t $DOCKER_IMAGE_TAG .
 
-# Apply Terraform infrastructure
-cd terraform
-terraform init
-terraform apply -auto-approve
-
-# Deploy to Kubernetes
-kubectl apply -f deployment.yaml
-
-# Check the status of the Kubernetes pods and services
-kubectl get pods
-kubectl get svc
+# Run the container
+echo "Running Docker container on port $PORT..."
+docker run -d -p $PORT:80 --name $CONTAINER_NAME $DOCKER_IMAGE_TAG
