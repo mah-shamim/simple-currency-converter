@@ -1,19 +1,25 @@
 pipeline {
     agent any
+    environment {
+        DOCKER_TAG = "currency_converter:${env.BUILD_ID}"
+        CONTAINER_NAME = "currency_converter_app"
+    }
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/mah-shamim/simple-calculator.git'
+                git 'https://github.com/mah-shamim/simple-currency-converter.git'
             }
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t simple-calculator .'
+                script {
+                    dockerImage = docker.build(DOCKER_TAG)
+                }
             }
         }
-        stage('Run Docker Container') {
+        stage('Run Container') {
             steps {
-                sh 'docker run -d -p 8080:80 simple-calculator'
+                sh 'bash deploy.sh'
             }
         }
     }
