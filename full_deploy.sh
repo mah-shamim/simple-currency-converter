@@ -2,7 +2,7 @@
 
 CONTAINER_NAME="currency_converter_app"
 DOCKER_IMAGE_TAG="currency_converter:$BUILD_ID"
-PORT=9090
+PORT=9191
 
 # Check if the container is running
 if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
