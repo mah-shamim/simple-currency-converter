@@ -12,6 +12,6 @@ resource "docker_container" "app_container" {
   name  = "currency_converter_container"
   ports {
     internal = 80
-    external = 9090
+    external = 9191
   }
 }
