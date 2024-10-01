@@ -22,5 +22,7 @@ docker run -d -p $PORT:80 --name $CONTAINER_NAME $DOCKER_IMAGE_TAG
 # Deploy to Kubernetes
 echo "Deploying to Kubernetes..."
 whoami
+su -
+whoami
 kubectl apply -f k8s-deployment.yml --validate=false
 kubectl apply -f k8s-service.yml --validate=false
