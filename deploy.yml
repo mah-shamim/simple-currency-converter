@@ -1,14 +1,5 @@
 - hosts: localhost
   become: true
-  vars:
-    # Generate a unique identifier for the Docker image and container
-    docker_id: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"  # Timestamp as unique ID
-    docker_container_name: "simple-calculator-{{ docker_id }}"
-    docker_image_name: "simple-calculator-{{ docker_id }}"
-    docker_port: "9292"  # Change this to any port you prefer
-    docker_username: ""  # Change this to your username
-    docker_password: ""  # Change this to your password
-
   tasks:
     - name: Check if Docker is already installed
       command: docker --version
@@ -28,19 +19,19 @@
         enabled: true
 
     - name: Build Docker Image
-      command: docker build -t {{ docker_image_name }} .
+      command: docker build -t simple-calculator-ansible .
       #args:
         #chdir: /path/to/docker/project  # Replace with your actual Docker project path
 
     - name: Run Docker Container
-      command: docker run -d -p {{ docker_port }}:80 {{ docker_image_name }}
+      command: docker run -d -p 9292:80 simple-calculator-ansible
 
     - name: Log in to Docker Hub
-      command: docker login -u "{{ docker_username }}" -p "{{ docker_password }}"
+      command: docker login -u "mahshamim" -p "01614747054@R!f"
       no_log: true
 
     - name: Tag Docker image for Docker Hub
-      command: docker tag {{ docker_image_name }} "{{ docker_username }}/{{ docker_image_name }}:latest"
+      command: docker tag simple-calculator-ansible "mahshamim/simple-calculator-ansible:latest"
 
     - name: Push Docker image to Docker Hub
-      command: docker push "{{ docker_username }}/{{ docker_image_name }}:latest"
+      command: docker push "mahshamim/simple-calculator-ansible:latest"
