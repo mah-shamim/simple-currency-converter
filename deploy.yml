@@ -24,7 +24,7 @@
         #chdir: Dockerfile  # Replace with your actual Docker project path
 
     - name: Run Docker Container
-      command: docker run -d -p 9191:80 simple-calculator-ansible
+      command: docker run -d -p 9292:80 simple-calculator-ansible
 
     - name: Load .env file
       shell: |
