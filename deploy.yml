@@ -20,8 +20,8 @@
 
     - name: Build Docker Image
       command: docker build -t simple-calculator-ansible .
-      args:
-        chdir: Dockerfile  # Replace with your actual Docker project path
+      #args:
+        #chdir: Dockerfile  # Replace with your actual Docker project path
 
     - name: Run Docker Container
       command: docker run -d -p 9191:80 simple-calculator-ansible
