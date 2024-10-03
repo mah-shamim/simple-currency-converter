@@ -4,7 +4,7 @@
     - name: Load .env file
       shell: |
         set -a
-        source /path/to/.env  # Replace with the path to your .env file
+        source .env  # Replace with the path to your .env file
         set +a
       register: env_loaded
 
