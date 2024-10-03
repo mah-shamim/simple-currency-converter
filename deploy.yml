@@ -1,6 +1,13 @@
 - hosts: localhost
   become: true
   tasks:
+    - name: Load .env file
+      shell: |
+        set -a
+        source /path/to/.env  # Replace with the path to your .env file
+        set +a
+      register: env_loaded
+
     - name: Check if Docker is already installed
       command: docker --version
       register: docker_installed
@@ -18,27 +25,38 @@
         state: started
         enabled: true
 
+    - name: Check if the Docker container already exists
+      command: docker ps -aq -f name={{ lookup('env', 'docker_container_name') }}
+      register: existing_container
+      ignore_errors: true
+
+    - name: Remove existing Docker container if it exists
+      command: docker rm -f {{ existing_container.stdout }}
+      when: existing_container.stdout != ""
+
+    - name: Check if the Docker image already exists
+      command: docker images -q {{ lookup('env', 'docker_image_name') }}
+      register: existing_image
+      ignore_errors: true
+
+    - name: Remove existing Docker image if it exists
+      command: docker rmi -f {{ existing_image.stdout }}
+      when: existing_image.stdout != ""
+
     - name: Build Docker Image
-      command: docker build -t simple-calculator-ansible .
-      #args:
-        #chdir: Dockerfile  # Replace with your actual Docker project path
+      command: docker build -t {{ lookup('env', 'docker_image_name') }} .
+      args:
+        chdir: /path/to/docker/project  # Replace with your actual Docker project path
 
     - name: Run Docker Container
-      command: docker run -d -p 9191:80 simple-calculator-ansible
-
-    - name: Load .env file
-      shell: |
-        set -a
-        source .env  # Replace with the path to your .env file
-        set +a
+      command: docker run -d -p {{ lookup('env', 'docker_port') }}:80 {{ lookup('env', 'docker_image_name') }}
 
     - name: Log in to Docker Hub
       command: docker login -u "{{ lookup('env', 'dockerhub_username') }}" -p "{{ lookup('env', 'dockerhub_password') }}"
       no_log: true
 
     - name: Tag Docker image for Docker Hub
-      command: docker tag simple-calculator-ansible "{{ lookup('env', 'dockerhub_username') }}/simple-calculator-ansible:latest"
+      command: docker tag {{ lookup('env', 'docker_image_name') }} "{{ lookup('env', 'dockerhub_username') }}/{{ lookup('env', 'docker_image_name') }}:latest"
 
     - name: Push Docker image to Docker Hub
-      command: docker push "{{ lookup('env', 'dockerhub_username') }}/simple-calculator-ansible:latest"
-
+      command: docker push "{{ lookup('env', 'dockerhub_username') }}/{{ lookup('env', 'docker_image_name') }}:latest"
