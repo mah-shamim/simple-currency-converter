@@ -1,0 +1,88 @@
+The error you're seeing, `"services 'kubernetes-dashboard' not found"`, indicates that the Kubernetes Dashboard service was not successfully created or is not running as expected.
+
+Here’s how to resolve the issue:
+
+### Step-by-Step Fix:
+
+1. **Verify Kubernetes Dashboard Installation:**
+
+   First, check if the Kubernetes Dashboard is installed properly by listing the services in the `kubernetes-dashboard` namespace:
+
+   ```bash
+   kubectl get services -n kubernetes-dashboard
+   ```
+
+   If you don't see the service, it means the dashboard wasn't installed correctly.
+
+2. **Re-apply the Kubernetes Dashboard Manifest:**
+
+   Reapply the Kubernetes Dashboard YAML file. Sometimes, the installation can fail due to a connection issue or incomplete deployment.
+
+   ```bash
+   kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.5/aio/deploy/recommended.yaml --validate=false
+   ```
+
+3. **Check Pods in the `kubernetes-dashboard` Namespace:**
+
+   Check if the dashboard pods are running in the correct namespace (`kubernetes-dashboard`):
+
+   ```bash
+   kubectl get pods -n kubernetes-dashboard
+   ```
+
+   If the pods aren't running or show errors, inspect them:
+
+   ```bash
+   kubectl describe pod <pod-name> -n kubernetes-dashboard
+   kubectl logs <pod-name> -n kubernetes-dashboard
+   ```
+
+4. **Enable Minikube Dashboard Addon:**
+
+   Minikube has a dashboard addon that you can enable directly, which might resolve the issue. You can enable it using:
+
+   ```bash
+   minikube addons enable dashboard
+   ```
+
+   Then, check if the dashboard is running:
+
+   ```bash
+   kubectl get services -n kubernetes-dashboard
+   ```
+
+5. **Access the Kubernetes Dashboard:**
+
+   After ensuring the dashboard is running, start the proxy to access the dashboard:
+
+   ```bash
+   kubectl proxy
+   ```
+
+   Access the dashboard through the following URL:
+
+   ```
+   http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+   ```
+
+6. **Check Service and Endpoint:**
+
+   If you're still encountering issues, verify that the service and endpoint are created correctly:
+
+   ```bash
+   kubectl get services -n kubernetes-dashboard
+   kubectl get endpoints -n kubernetes-dashboard
+   ```
+
+7. **ClusterRole and Role Binding:**
+
+   Ensure the correct ClusterRoleBinding is set for the dashboard. If the service account isn't created properly, create it as follows:
+
+   ```bash
+   kubectl create serviceaccount dashboard-admin -n kubernetes-dashboard
+   kubectl create clusterrolebinding dashboard-admin --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:dashboard-admin
+   ```
+
+### Summary:
+
+By reapplying the manifest, checking the running services and pods, and ensuring that the dashboard addon is enabled in Minikube, you should resolve the issue with the Kubernetes Dashboard not being found. Let me know if you encounter any further issues during these steps!
