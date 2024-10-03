@@ -1,27 +1,22 @@
 - hosts: localhost
   become: true
   tasks:
-    - name: Ensure Docker is installed
+    - name: Check if Docker is already installed
+      command: docker --version
+      register: docker_installed
+      ignore_errors: true
+
+    - name: Install Docker
       apt:
         name: docker.io
         state: present
-      when: ansible_os_family == "Debian"
+      when: docker_installed.rc != 0
 
     - name: Start Docker Service
       service:
         name: docker
         state: started
         enabled: true
-
-    - name: Check if Docker is already installed
-      command: docker --version
-      register: docker_installed
-      ignore_errors: true
-
-    - name: Skip Docker installation if already installed
-      debug:
-        msg: "Docker is already installed, skipping installation."
-      when: docker_installed.rc == 0
 
     - name: Build Docker Image
       command: docker build -t simple-calculator-ansible .
@@ -46,3 +41,4 @@
 
     - name: Push Docker image to Docker Hub
       command: docker push "{{ lookup('env', 'dockerhub_username') }}/simple-calculator-ansible:latest"
+
