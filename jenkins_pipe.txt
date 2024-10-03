@@ -1,0 +1,110 @@
+To add Docker Hub push and pull functionality to your Jenkins pipeline, you need to:
+
+1. **Log in to Docker Hub** using credentials stored in Jenkins (you can store these as secret credentials in Jenkins).
+2. **Push the Docker image** built during the `Build Docker Image` stage to Docker Hub.
+3. In the deployment step, **pull the Docker image from Docker Hub**.
+
+### Updated Jenkins Pipeline Script
+
+Here’s how you can modify your pipeline to push and pull the Docker image from Docker Hub:
+
+```groovy
+pipeline {
+    agent any
+    environment {
+        DOCKER_TAG = "your-dockerhub-username/currency_converter:$BUILD_ID"  // Change this to your Docker Hub username
+        CONTAINER_NAME = "currency_converter_app"
+        DOCKER_CREDENTIALS_ID = 'dockerhub-credentials-id'  // Jenkins credentials ID for Docker Hub login
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', credentialsId: '', url: 'https://github.com/mah-shamim/simple-currency-converter.git'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build(DOCKER_TAG)
+                }
+            }
+        }
+        stage('Login to Docker Hub') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                        echo "Logged in to Docker Hub"
+                    }
+                }
+            }
+        }
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                        dockerImage.push() // Push the image to Docker Hub
+                    }
+                }
+            }
+        }
+        stage('Run Container') {
+            steps {
+                sh 'bash deploy.sh'  // Ensure the script pulls the image from Docker Hub
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                // Cleanup any dangling images after build
+                sh 'docker rmi $(docker images -f "dangling=true" -q) || true'
+            }
+        }
+    }
+}
+```
+
+### Breakdown of New Stages
+
+1. **Login to Docker Hub**:
+   - The `docker.withRegistry` block uses the Jenkins credentials (ID: `DOCKER_CREDENTIALS_ID`) to log in to Docker Hub before pushing the image.
+   - Store your Docker Hub username and password in Jenkins' Credentials section and reference it with `DOCKER_CREDENTIALS_ID`.
+
+2. **Push to Docker Hub**:
+   - The Docker image is pushed to Docker Hub using the `dockerImage.push()` command after logging in.
+
+3. **Run Container**:
+   - Ensure that in the `deploy.sh` script, you pull the image from Docker Hub instead of building it again locally. Update your `deploy.sh` to pull the image from Docker Hub:
+     ```bash
+     # deploy.sh
+
+     CONTAINER_NAME="currency_converter_app"
+     DOCKER_IMAGE_TAG="your-dockerhub-username/currency_converter:$BUILD_ID"
+     PORT=9191
+
+     # Check if the container is running
+     if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
+         echo "Stopping and removing existing container..."
+         docker stop $CONTAINER_NAME
+         docker rm $CONTAINER_NAME
+     fi
+
+     # Pull the image from Docker Hub
+     echo "Pulling Docker image from Docker Hub..."
+     docker pull $DOCKER_IMAGE_TAG
+
+     # Run the container
+     echo "Running Docker container on port $PORT..."
+     docker run -d -p $PORT:80 --name $CONTAINER_NAME $DOCKER_IMAGE_TAG
+
+     # Deploy to Kubernetes
+     echo "Deploying to Kubernetes..."
+     kubectl apply -f k8s-deployment.yml --validate=false
+     kubectl apply -f k8s-service.yml --validate=false
+     ```
+
+### Final Points:
+
+- Ensure that `dockerhub-credentials-id` is set up in Jenkins to contain your Docker Hub credentials.
+- Replace `your-dockerhub-username` with your actual Docker Hub username.
+- If the image has been successfully pushed to Docker Hub, the deployment step (`deploy.sh`) will now pull the image from Docker Hub and deploy it.

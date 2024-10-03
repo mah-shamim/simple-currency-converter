@@ -1,0 +1,109 @@
+To add Docker Hub push and pull functionality to your script, you'll need to push the built Docker image to Docker Hub and pull it during the Kubernetes deployment phase. To achieve this, you'll need to:
+
+1. Log in to Docker Hub (if not already logged in).
+2. Push the image to Docker Hub after building it.
+3. Modify the Kubernetes YAML file to pull the image from Docker Hub.
+4. Optionally, add Docker Hub credentials to Kubernetes for private repositories.
+
+Here’s the modified version of your script with Docker Hub push/pull:
+
+### Updated Script with Docker Hub Push/Pull
+
+```bash
+#!/bin/bash
+
+CONTAINER_NAME="currency_converter_app"
+DOCKER_IMAGE_TAG="currency_converter:$BUILD_ID"
+DOCKER_HUB_REPO="your-dockerhub-username/currency_converter"
+PORT=9191
+
+# Log in to Docker Hub (if not logged in)
+echo "Logging into Docker Hub..."
+docker login || { echo "Docker login failed! Exiting."; exit 1; }
+
+# Check if the container is running
+if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
+    echo "Stopping and removing existing container..."
+    docker stop $CONTAINER_NAME || { echo "Failed to stop container! Exiting."; exit 1; }
+    docker rm $CONTAINER_NAME || { echo "Failed to remove container! Exiting."; exit 1; }
+fi
+
+# Build the Docker image
+echo "Building Docker image with tag $DOCKER_IMAGE_TAG..."
+docker build -t $DOCKER_IMAGE_TAG . || { echo "Docker build failed! Exiting."; exit 1; }
+
+# Tag the Docker image for Docker Hub
+DOCKER_HUB_TAG="$DOCKER_HUB_REPO:$BUILD_ID"
+docker tag $DOCKER_IMAGE_TAG $DOCKER_HUB_TAG
+
+# Push the Docker image to Docker Hub
+echo "Pushing Docker image to Docker Hub with tag $DOCKER_HUB_TAG..."
+docker push $DOCKER_HUB_TAG || { echo "Docker push failed! Exiting."; exit 1; }
+
+# Run the container (optional step for local testing)
+echo "Running Docker container on port $PORT..."
+docker run -d -p $PORT:80 --name $CONTAINER_NAME $DOCKER_IMAGE_TAG || { echo "Failed to start Docker container! Exiting."; exit 1; }
+
+# Update Kubernetes deployment YAML to pull the image from Docker Hub
+sed -i "s|image: .*|image: $DOCKER_HUB_TAG|g" k8s-deployment.yml
+
+# Deploy to Kubernetes
+echo "Deploying to Kubernetes..."
+kubectl apply -f k8s-deployment.yml --validate=false || { echo "Failed to apply Kubernetes deployment! Exiting."; exit 1; }
+kubectl apply -f k8s-service.yml --validate=false || { echo "Failed to apply Kubernetes service! Exiting."; exit 1; }
+
+# Log some debugging information
+echo "Currently running Docker containers:"
+docker ps
+
+echo "Current Kubernetes deployments:"
+kubectl get deployments
+
+echo "Current Kubernetes services:"
+kubectl get services
+```
+
+### Explanation:
+
+1. **Docker Login**:
+   - The script logs into Docker Hub using the `docker login` command.
+   - You’ll be prompted to enter your Docker Hub username and password unless you have a credential store set up.
+
+2. **Tagging the Image**:
+   - The image is tagged using your Docker Hub repository (`your-dockerhub-username/currency_converter:$BUILD_ID`). You should replace `your-dockerhub-username` with your actual Docker Hub username.
+
+3. **Pushing the Image to Docker Hub**:
+   - The script pushes the built image to Docker Hub using `docker push $DOCKER_HUB_TAG`.
+
+4. **Modifying the Kubernetes Deployment**:
+   - The Kubernetes deployment YAML file (`k8s-deployment.yml`) is updated to use the image from Docker Hub by replacing the existing `image` field with the Docker Hub tag using the `sed` command.
+
+### Kubernetes Considerations:
+
+- **Private Docker Repositories**:
+  If the Docker Hub repository is private, Kubernetes will need Docker credentials to pull the image. You can create a Kubernetes secret for Docker registry credentials and associate it with the deployment:
+
+  ```bash
+  kubectl create secret docker-registry regcred \
+      --docker-server=https://index.docker.io/v1/ \
+      --docker-username=your-dockerhub-username \
+      --docker-password=your-dockerhub-password \
+      --docker-email=your-email@example.com
+  ```
+
+  Then, in your `k8s-deployment.yml`, reference this secret in your deployment spec:
+
+  ```yaml
+  spec:
+    containers:
+      - name: currency-converter
+        image: your-dockerhub-username/currency_converter:$BUILD_ID
+    imagePullSecrets:
+      - name: regcred
+  ```
+
+### Notes:
+- Replace `your-dockerhub-username` and `your-dockerhub-password` with your actual Docker Hub credentials.
+- Make sure that your Kubernetes cluster can access Docker Hub and has the necessary permissions if using a private repository.
+
+This setup allows your application to be built, pushed to Docker Hub, and deployed to Kubernetes with proper image management.
