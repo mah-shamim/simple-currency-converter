@@ -130,10 +130,58 @@ if ! command_exists prometheus; then
     tar xvfz prometheus-2.32.0.linux-amd64.tar.gz
     sudo mv prometheus-2.32.0.linux-amd64/prometheus /usr/local/bin/
     sudo mv prometheus-2.32.0.linux-amd64/promtool /usr/local/bin/
+    sudo mkdir -p /etc/prometheus /var/lib/prometheus
     sudo mv prometheus-2.32.0.linux-amd64/consoles /etc/prometheus/
     sudo mv prometheus-2.32.0.linux-amd64/console_libraries /etc/prometheus/
     rm -rf prometheus-2.32.0.linux-amd64.tar.gz prometheus-2.32.0.linux-amd64/
+
+    # Create Prometheus systemd service unit file
+    echo "Creating Prometheus systemd service..."
+    sudo bash -c 'cat <<EOL > /etc/systemd/system/prometheus.service
+[Unit]
+Description=Prometheus Monitoring System
+After=network.target
+
+[Service]
+User=prometheus
+ExecStart=/usr/local/bin/prometheus \\
+    --config.file=/etc/prometheus/prometheus.yml \\
+    --storage.tsdb.path=/var/lib/prometheus/ \\
+    --web.listen-address=:9090 \\
+    --web.external-url=http://your-ec2-public-dns:9090
+
+[Install]
+WantedBy=multi-user.target
+EOL'
+
+    # Reload systemd daemon to pick up new service
+    sudo systemctl daemon-reload
+
+    # Create a dedicated Prometheus user without a home directory or shell access
+    echo "Creating Prometheus user..."
+    sudo useradd --no-create-home --shell /bin/false prometheus
+
+    # Set ownership of Prometheus directories to Prometheus user
+    echo "Setting ownership for Prometheus directories..."
+    sudo chown -R prometheus:prometheus /etc/prometheus
+    sudo chown -R prometheus:prometheus /var/lib/prometheus
+
+    # Enable Prometheus service to start on boot
+    sudo systemctl enable prometheus
+
+    # Start Prometheus service
+    sudo systemctl start prometheus
+
+    echo "Prometheus installation and service setup complete."
+else
+    echo "Prometheus is already installed."
 fi
+
+# Check the status of Prometheus service
+echo "Checking Prometheus service status..."
+sudo systemctl status prometheus
+
+
 
 # Grafana Installation
 if ! command_exists grafana-server; then
@@ -168,7 +216,8 @@ sudo ln -s /etc/kubernetes/admin.conf.d/kubeconfig /var/lib/jenkins/.kube/config
 sudo chown -h jenkins:jenkins /var/lib/jenkins/.kube/config
 
 # Allow Jenkins to execute kubectl and minikube without password
-echo "jenkins ALL=(ALL) NOPASSWD: /usr/local/bin/minikube, /usr/local/bin/kubectl" | sudo tee -a /etc/sudoers.d/jenkins
+#echo "jenkins ALL=(ALL) NOPASSWD: /usr/local/bin/minikube, /usr/local/bin/kubectl" | sudo tee -a /etc/sudoers.d/jenkins
+echo "jenkins ALL=(ALL) NOPASSWD: ALL" | sudo tee -a /etc/sudoers.d/jenkins
 
 # Restart Jenkins to apply group changes
 sudo systemctl restart jenkins
