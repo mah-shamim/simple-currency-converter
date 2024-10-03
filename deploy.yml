@@ -1,6 +1,13 @@
 - hosts: localhost
   become: true
   tasks:
+    - name: Load .env file
+      shell: |
+        set -a
+        source /home/ubuntu/simple-currency-converter/.env  # Replace with the path to your .env file
+        set +a
+      register: env_loaded
+
     - name: Check if Docker is already installed
       command: docker --version
       register: docker_installed
@@ -19,26 +26,19 @@
         enabled: true
 
     - name: Build Docker Image
-      command: docker build -t simple-calculator-ansible .
-      #args:
-        #chdir: Dockerfile  # Replace with your actual Docker project path
+      command: docker build -t {{ lookup('env', 'docker_image_name') }} .
+      args:
+        chdir: /home/ubuntu/simple-currency-converter  # Replace with your actual Docker project path
 
     - name: Run Docker Container
-      command: docker run -d -p 9292:80 simple-calculator-ansible
-
-    - name: Load .env file
-      shell: |
-        set -a
-        source .env  # Replace with the path to your .env file
-        set +a
+      command: docker run -d -p {{ lookup('env', 'docker_port') }}:80 {{ lookup('env', 'docker_image_name') }}
 
     - name: Log in to Docker Hub
       command: docker login -u "{{ lookup('env', 'dockerhub_username') }}" -p "{{ lookup('env', 'dockerhub_password') }}"
       no_log: true
 
     - name: Tag Docker image for Docker Hub
-      command: docker tag simple-calculator-ansible "{{ lookup('env', 'dockerhub_username') }}/simple-calculator-ansible:latest"
+      command: docker tag {{ lookup('env', 'docker_image_name') }} "{{ lookup('env', 'dockerhub_username') }}/{{ lookup('env', 'docker_image_name') }}:latest"
 
     - name: Push Docker image to Docker Hub
-      command: docker push "{{ lookup('env', 'dockerhub_username') }}/simple-calculator-ansible:latest"
-
+      command: docker push "{{ lookup('env', 'dockerhub_username') }}/{{ lookup('env', 'docker_image_name') }}:latest"
