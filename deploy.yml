@@ -1,16 +1,11 @@
 - hosts: localhost
   become: true
   tasks:
-    - name: Check if Docker is already installed
-      command: docker --version
-      register: docker_installed
-      ignore_errors: true
-
-    - name: Install Docker
+    - name: Ensure Docker is installed
       apt:
         name: docker.io
         state: present
-      when: docker_installed.rc != 0
+      when: ansible_os_family == "Debian"
 
     - name: Start Docker Service
       service:
@@ -18,8 +13,36 @@
         state: started
         enabled: true
 
+    - name: Check if Docker is already installed
+      command: docker --version
+      register: docker_installed
+      ignore_errors: true
+
+    - name: Skip Docker installation if already installed
+      debug:
+        msg: "Docker is already installed, skipping installation."
+      when: docker_installed.rc == 0
+
     - name: Build Docker Image
       command: docker build -t simple-calculator-ansible .
+      args:
+        chdir: Dockerfile  # Replace with your actual Docker project path
 
     - name: Run Docker Container
-      command: docker run -d -p 9292:80 simple-calculator-ansible
+      command: docker run -d -p 9191:80 simple-calculator-ansible
+
+    - name: Load .env file
+      shell: |
+        set -a
+        source .env  # Replace with the path to your .env file
+        set +a
+
+    - name: Log in to Docker Hub
+      command: docker login -u "{{ lookup('env', 'dockerhub_username') }}" -p "{{ lookup('env', 'dockerhub_password') }}"
+      no_log: true
+
+    - name: Tag Docker image for Docker Hub
+      command: docker tag simple-calculator-ansible "{{ lookup('env', 'dockerhub_username') }}/simple-calculator-ansible:latest"
+
+    - name: Push Docker image to Docker Hub
+      command: docker push "{{ lookup('env', 'dockerhub_username') }}/simple-calculator-ansible:latest"

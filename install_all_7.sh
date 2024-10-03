@@ -73,8 +73,37 @@ fi
 # Ansible Installation
 if ! command_exists ansible; then
     echo "Installing Ansible..."
+    sudo apt-get update -y
     sudo apt-add-repository --yes --update ppa:ansible/ansible
     sudo apt-get install -y ansible
+
+    # Verify Ansible installation
+    echo "Verifying Ansible installation..."
+    ansible --version
+
+    # Set up Ansible configuration and host inventory for localhost
+    echo "Setting up Ansible configuration..."
+
+    # Create Ansible directories
+    mkdir -p ~/ansible
+
+    # Create Ansible hosts file
+    sudo tee ~/ansible/hosts > /dev/null <<EOL
+[local]
+localhost ansible_connection=local
+EOL
+
+    # Create Ansible configuration file
+    sudo tee ~/ansible/ansible.cfg > /dev/null <<EOL
+[defaults]
+inventory = ~/ansible/hosts
+host_key_checking = False
+EOL
+
+    # Test Ansible Setup
+    echo "Running Ansible ping on localhost..."
+    ansible local -m ping
+
 fi
 
 # Java Installation
