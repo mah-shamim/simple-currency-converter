@@ -29,24 +29,6 @@
         state: started
         enabled: true
 
-    - name: Check if the Docker container already exists
-      command: docker ps -aq -f name={{ lookup('env', 'docker_container_name') }}-{{ docker_id }}
-      register: existing_container
-      ignore_errors: true
-
-    - name: Remove existing Docker container if it exists
-      command: docker rm -f {{ existing_container.stdout }}
-      when: existing_container.stdout != ""
-
-    - name: Check if the Docker image already exists
-      command: docker images -q {{ lookup('env', 'docker_image_name') }}-{{ docker_id }}
-      register: existing_image
-      ignore_errors: true
-
-    - name: Remove existing Docker image if it exists
-      command: docker rmi -f {{ existing_image.stdout }}
-      when: existing_image.stdout != ""
-
     - name: Build Docker Image
       command: docker build -t {{ lookup('env', 'docker_image_name') }}-{{ docker_id }} .
       #args:
