@@ -18,7 +18,7 @@ docker build -t $DOCKER_IMAGE_TAG . || { echo "Docker build failed! Exiting."; e
 # Run the container
 echo "Running Docker container on port $PORT..."
 docker run -d -p $PORT:80 --name $CONTAINER_NAME $DOCKER_IMAGE_TAG || { echo "Failed to start Docker container! Exiting."; exit 1; }
-
+whoami
 # Deploy to Kubernetes
 echo "Deploying to Kubernetes..."
 kubectl apply -f k8s-deployment.yml --validate=false || { echo "Failed to apply Kubernetes deployment! Exiting."; exit 1; }
