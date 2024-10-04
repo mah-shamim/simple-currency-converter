@@ -178,8 +178,8 @@ else
 fi
 
 # Check the status of Prometheus service
-echo "Checking Prometheus service status..."
-sudo systemctl status prometheus
+#echo "Checking Prometheus service status..."
+#sudo systemctl status prometheus
 
 
 

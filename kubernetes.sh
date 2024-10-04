@@ -8,6 +8,8 @@ sudo chown jenkins:jenkins /home/ubuntu/.minikube/profiles/minikube/client.key
 sudo chown jenkins:jenkins /home/ubuntu/.minikube/ca.crt
 ls -l /home/ubuntu/.minikube/profiles/minikube/
 
+sudo -u jenkins minikube start --driver=docker
+
 
 
 kubectl proxy --port=8001
